@@ -8,6 +8,7 @@ env:
     DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     DOCKERHUB_KEY: ${{ secrets.DOCKER_KEY }}
     IMAGE_NAME: nodejs-app-argocd
+    COMMIT_ID: ${{ github.sha::5 }}
 
 jobs:
     build-and-deploy:
@@ -24,15 +25,15 @@ jobs:
             password: ${{ env.DOCKERHUB_KEY }}
 
         - name: Build Docker image
-          run: docker build -t ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+          run: docker build -t ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.COMMIT_ID }} .
 
         - name: Push Docker image
-          run: docker push ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          run: docker push ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.COMMIT_ID }} 
 
         - name: Update values.yaml
           run: |
             cd nodeapp
-            sed -i 's|APP_VERSION:.*|APP_VERSION: '${{ github.sha }}'|' values.yaml 
+            sed -i 's|APP_VERSION:.*|APP_VERSION: '${{ env.COMMIT_ID }} '|' values.yaml 
             git config --global user.name 'nurawiguna'
             git config --global user.email 'nuraaws11@gmail.com'
             git add values.yaml
