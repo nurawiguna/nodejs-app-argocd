@@ -8,7 +8,6 @@ env:
     DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     DOCKERHUB_KEY: ${{ secrets.DOCKER_KEY }}
     IMAGE_NAME: nodejs-app-argocd
-    IMAGE_TAG: $(echo ${{ github.sha }} | cut -c1-7)
 
 jobs:
     build-and-deploy:
@@ -25,17 +24,22 @@ jobs:
             password: ${{ env.DOCKERHUB_KEY }}
 
         - name: Build Docker image
-          run: docker build -t ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+          run: |
+            SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+            docker build -t ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${SHORT_SHA} .
 
         - name: Push Docker image
-          run: docker push ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} 
+          run: |
+            SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+            docker push ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${SHORT_SHA}
 
         - name: Update values.yaml
           run: |
             cd nodeapp
-            sed -i 's|APP_VERSION:.*|APP_VERSION: '${{ env.IMAGE_TAG }} '|' values.yaml 
+            SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+            sed -i 's|APP_VERSION:.*|APP_VERSION: '${SHORT_SHA}'|' values.yaml 
             git config --global user.name 'nurawiguna'
             git config --global user.email 'nuraaws11@gmail.com'
             git add values.yaml
-            git commit -m "Update values.yaml with the new image tag - ${{ env.IMAGE_TAG }}"
+            git commit -m "Update values.yaml with the new image tag - ${SHORT_SHA}"
             git push
