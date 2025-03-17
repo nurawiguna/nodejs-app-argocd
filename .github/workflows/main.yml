@@ -8,7 +8,7 @@ env:
     DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     DOCKERHUB_KEY: ${{ secrets.DOCKER_KEY }}
     IMAGE_NAME: nodejs-app-argocd
-    IMAGE_TAG: ${{ github.sha::5 }}
+    IMAGE_TAG: $(echo ${{ github.sha }} | cut -c1-5)
 
 jobs:
     build-and-deploy:
